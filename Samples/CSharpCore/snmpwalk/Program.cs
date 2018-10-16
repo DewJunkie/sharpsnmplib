@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -179,6 +180,12 @@ namespace SnmpWalk
             {
                 ObjectIdentifier test = extra.Count == 1 ? new ObjectIdentifier("1.3.6.1.2.1") : new ObjectIdentifier(extra[1]);
                 IList<Variable> result = new List<Variable>();
+
+                void OnReceived(Variable v)
+                {
+                    Console.WriteLine(v);
+                }
+
                 IPEndPoint receiver = new IPEndPoint(ip, 161);
                 if (version == VersionCode.V1)
                 {
@@ -186,7 +193,7 @@ namespace SnmpWalk
                 }
                 else if (version == VersionCode.V2)
                 {
-                    Messenger.BulkWalk(version, receiver, new OctetString(community), new OctetString(string.IsNullOrWhiteSpace(contextName) ? string.Empty: contextName),  test, result, timeout, maxRepetitions, mode, null, null);
+                    Messenger.BulkWalk(version, receiver, new OctetString(community), new OctetString(string.IsNullOrWhiteSpace(contextName) ? string.Empty: contextName),  test, OnReceived, timeout, maxRepetitions, mode, null, null);
                 }
                 else
                 {
@@ -219,7 +226,7 @@ namespace SnmpWalk
 
                     Discovery discovery = Messenger.GetNextDiscovery(SnmpType.GetBulkRequestPdu);
                     ReportMessage report = discovery.GetResponse(timeout, receiver);
-                    Messenger.BulkWalk(version, receiver, new OctetString(user), new OctetString(string.IsNullOrWhiteSpace(contextName) ? string.Empty : contextName),  test, result, timeout, maxRepetitions, mode, priv, report);
+                    Messenger.BulkWalk(version, receiver, new OctetString(user), new OctetString(string.IsNullOrWhiteSpace(contextName) ? string.Empty : contextName),  test, OnReceived, timeout, maxRepetitions, mode, priv, report);
                 }
 
                 foreach (Variable variable in result)
@@ -234,6 +241,12 @@ namespace SnmpWalk
             catch (SocketException ex)
             {
                 Console.WriteLine(ex);
+            }
+
+            if (Debugger.IsAttached)
+            {
+                Console.WriteLine("Press any key to continue");
+                Console.ReadKey();
             }
         }
 

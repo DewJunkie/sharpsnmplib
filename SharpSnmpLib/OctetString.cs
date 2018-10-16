@@ -193,7 +193,15 @@ namespace Lextm.SharpSnmpLib
                 throw new ArgumentNullException(nameof(encoding));
             }
 
-            return encoding.GetString(_raw, 0, _raw.Length); // use this call for SL3.
+            if (_raw.Any(c => Char.IsControl((char) c)))
+            {
+                return BitConverter.ToString(_raw);
+            }
+            else
+            {
+                return encoding.GetString(_raw, 0, _raw.Length); // use this call for SL3.
+            }
+            
         }
 
         /// <summary>

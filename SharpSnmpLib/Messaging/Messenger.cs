@@ -783,18 +783,48 @@ namespace Lextm.SharpSnmpLib.Messaging
         /// <param name="community">Community name.</param>
         /// <param name="contextName">Context name.</param>
         /// <param name="table">OID.</param>
-        /// <param name="list">A list to hold the results.</param>
+        /// <param name="list">list of resulting values.</param>
         /// <param name="timeout">The time-out value, in milliseconds. The default value is 0, which indicates an infinite time-out period. Specifying -1 also indicates an infinite time-out period.</param>
         /// <param name="maxRepetitions">The max repetitions.</param>
         /// <param name="mode">Walk mode.</param>
         /// <param name="privacy">The privacy provider.</param>
         /// <param name="report">The report.</param>
         /// <returns></returns>
-        public static int BulkWalk(VersionCode version, IPEndPoint endpoint, OctetString community, OctetString contextName, ObjectIdentifier table, IList<Variable> list, int timeout, int maxRepetitions, WalkMode mode, IPrivacyProvider privacy, ISnmpMessage report)
+        public static int BulkWalk(VersionCode  version,     IPEndPoint       endpoint, OctetString     community,
+                                   OctetString  contextName, ObjectIdentifier table,    IList<Variable> list,
+                                   int          timeout,
+                                   int          maxRepetitions, WalkMode mode, IPrivacyProvider privacy,
+                                   ISnmpMessage report)
         {
-            if (list == null)
+            void OnReceived(Variable v)
             {
-                throw new ArgumentNullException(nameof(list));
+                list.Add(v);
+            }
+
+            return BulkWalk(version, endpoint, community, contextName, table, OnReceived, timeout, maxRepetitions, mode,
+                            privacy, report);
+        }
+
+        /// <summary>
+        /// Walks.
+        /// </summary>
+        /// <param name="version">Protocol version.</param>
+        /// <param name="endpoint">Endpoint.</param>
+        /// <param name="community">Community name.</param>
+        /// <param name="contextName">Context name.</param>
+        /// <param name="table">OID.</param>
+        /// <param name="onReceived">And action to perform with each result.</param>
+        /// <param name="timeout">The time-out value, in milliseconds. The default value is 0, which indicates an infinite time-out period. Specifying -1 also indicates an infinite time-out period.</param>
+        /// <param name="maxRepetitions">The max repetitions.</param>
+        /// <param name="mode">Walk mode.</param>
+        /// <param name="privacy">The privacy provider.</param>
+        /// <param name="report">The report.</param>
+        /// <returns></returns>
+        public static int BulkWalk(VersionCode version, IPEndPoint endpoint, OctetString community, OctetString contextName, ObjectIdentifier table, Action<Variable> onReceived, int timeout, int maxRepetitions, WalkMode mode, IPrivacyProvider privacy, ISnmpMessage report)
+        {
+            if (onReceived == null)
+            {
+                throw new ArgumentNullException(nameof(onReceived));
             }
 
             if (version == VersionCode.V1)
@@ -825,7 +855,8 @@ namespace Lextm.SharpSnmpLib.Messaging
                         goto end;
                     }
 
-                    list.Add(v);
+                    onReceived(v);
+                    //list.Add(v);
                     if (id.StartsWith(rowMask, StringComparison.Ordinal))
                     {
                         result++;
