@@ -39,7 +39,7 @@ namespace Lextm.SharpSnmpLib
     /// <remarks>
     /// <para>Represents SNMP variable bind.</para>
     /// </remarks>
-    public sealed class Variable
+    public class Variable
     {
         /// <summary>
         /// Creates a <see cref="Variable"/> instance with a specific <see cref="ObjectIdentifier"/>.
