@@ -193,13 +193,19 @@ namespace Lextm.SharpSnmpLib
                 throw new ArgumentNullException(nameof(encoding));
             }
 
-            if (_raw.Any(c => Char.IsControl((char) c)))
+            // Ignore these chars in the raw stream.
+            // For now \r \n
+            var ignore = new[] {10, 13};
+            var raw = _raw.Where(c => !ignore.Contains(c))
+                          .ToArray();
+            
+            if (raw.Any(c => Char.IsControl((char) c)))
             {
-                return BitConverter.ToString(_raw);
+                return BitConverter.ToString(raw);
             }
             else
             {
-                return encoding.GetString(_raw, 0, _raw.Length); // use this call for SL3.
+                return encoding.GetString(raw, 0, raw.Length); // use this call for SL3.
             }
             
         }
