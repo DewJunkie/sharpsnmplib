@@ -182,6 +182,15 @@ namespace Lextm.SharpSnmpLib
         {
             return _oid;
         }
+
+        public ObjectIdentifier Parent()
+        {
+            if (_oid.Length == 2)
+            {
+                return null;
+            }
+            return new ObjectIdentifier(_oid.Take(_oid.Length - 1).ToArray());
+        }
         
         /// <summary>
         /// Compares the current object with another object of the same type.
